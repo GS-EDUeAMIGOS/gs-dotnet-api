@@ -1,0 +1,6 @@
+@ViaCidada.Ouvidoria.Api_HostAddress = http://localhost:5172
+
+GET {{ViaCidada.Ouvidoria.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

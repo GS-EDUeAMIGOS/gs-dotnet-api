@@ -1,67 +1,195 @@
-# gs-dotnet-api
+# Via Cidadã — API de Ouvidoria e Mobilidade Urbana
 
-**FIAP — Global Solution 2026/2 — CitizenTech**  
-**Disciplina:** Advanced Business Development with .NET
+API REST em ASP.NET Core 8 para receber manifestações e propostas de melhoria de mobilidade urbana, organizadas por região. A aplicação usa controllers, Entity Framework Core 8 e Oracle Database por meio de `Oracle.EntityFrameworkCore`.
 
-> Estado: preparação documental inicial. Não há aplicação, testes executados, infraestrutura provisionada ou entrega concluída neste repositório.
+## Integrantes
 
-## Finalidade e limites
+| Nome | RM |Truma   |
+|---|---|---|
+| Alisson Kawan Evangelista Silva | 567598 |  2TDS |
+| Kenji Fernandes Wakabayashi | 568156| 2TDS  |
+| Erick Ramos Santos | 567837 |  2TDS |
+|Eduardo Boni dos Santos| 567236| 2TDS|
+| Marcos Vinicius de Jesus Almeida|567214|2TDS |
 
-API REST em ASP.NET Core 8 com controllers, Entity Framework Core, Oracle FIAP e Migrations.
+## Relacionamento
 
-Este repositório representa um **entregável acadêmico da GS**, não o produto completo nem um entregável do Challenge. Os sete repositórios devem representar a mesma solução CitizenTech (slide 20). A solução, o nome do grupo, os integrantes, RMs, turma e responsáveis ainda precisam de confirmação específica para esta GS.
+Uma região urbana pode estar associada a várias propostas; cada proposta pertence a uma região urbana.
 
-Nenhum código, modelo de domínio ou identidade do Challenge foi copiado. Reutilização futura deve ter origem principal, versão e revisão combinadas; separar entregas não significa duplicar implementação sem controle.
+```mermaid
+erDiagram
+    REGIAO_URBANA ||--o{ PROPOSTA_MELHORIA : recebe
+    REGIAO_URBANA {
+        int Id PK
+        string Nome
+        string ZonaCidade
+        string Subprefeitura
+    }
+    PROPOSTA_MELHORIA {
+        int Id PK
+        string Titulo
+        string Descricao
+        string Categoria
+        string CodigoLinhaOuParada
+        string Status
+        datetime DataCriacao
+        int RegiaoUrbanaId FK
+    }
+```
 
-## Fonte e prazo
+As tabelas Oracle são `TB_VC_NET_REGIOES` e `TB_VC_NET_PROPOSTAS`.
 
-Fonte primária fornecida pelo usuário: `2TDS Agosto - Global Solution 2026-2.pptx`, slides 22–28. Orientações gerais: slides 11–16 e 20; submissão: slides 81–85. A numeração é a posição real dos slides no PPTX, não o contador interno de cada disciplina.
+## Pré-requisitos
 
-- **Entrega indicada: 19/11/2026, até 23h55, no Portal FIAP** (slide 14).
-- Cadastro do grupo indicado até **13/11/2026** (slides 12 e 14); notas do arquivo pedem confirmação desse prazo.
-- Apresentações indicadas de **23 a 27/11/2026**; conferir modalidade e agenda com o professor.
-- Este checklist é derivado do PPTX, não substitui rubrica final e instruções do Portal. O original não foi republicado.
+- .NET SDK 8.0
+- Acesso ao Oracle informado na connection string
+- Ferramenta Entity Framework: `dotnet tool install --global dotnet-ef --version 8.0.*` (se ainda não estiver instalada)
 
-## Escopo e checklist
+Execute os comandos abaixo na pasta raiz do projeto. Substitua os placeholders pelas suas próprias credenciais; não as grave ou versione no `appsettings.json`.
 
-Veja [requisitos da disciplina](docs/requisitos-gs.md) e [decisões e pendências](docs/pendencias.md).
+```bash
+dotnet user-secrets init
+dotnet user-secrets set "ConnectionStrings:OracleConnection" "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=oracle.fiap.com.br)(PORT=1521))(CONNECT_DATA=(SID=ORCL)));User Id=SEU_RM;Password=SUA_SENHA;"
+```
 
-Swagger/OpenAPI, autenticação, arquitetura em camadas e testes automatizados não são cobrados nesta entrega (slide 23). Isso não equivale a proibir boas práticas justificadas.
+Substitua `SEU_RM` e `SUA_SENHA` pelos valores reais somente no comando executado localmente. Em shell Unix pode-se evitar deixar senha no histórico usando o mecanismo de entrada segura do shell; jamais publique a connection string.
 
-## Equipe e responsabilidade
+Crie/atualize o schema conforme a migration e inicie a API:
 
-| Informação | Situação |
-|---|---|
-| Grupo, solução e cidadão beneficiado | A confirmar para a GS |
-| Integrantes, RM e turma | A confirmar para a GS |
-| Responsável principal desta disciplina | A confirmar — um único dono por tarefa |
-| Revisor | A combinar conforme fronteiras afetadas |
+```bash
+dotnet ef database update
+dotnet run
+```
 
-Não interpretar membros da organização ou integrantes do Challenge como composição aprovada da GS. Documentar ODS e contribuição às metas conforme slide 11, usando fontes para alegações de impacto.
+O endereço de escuta é exibido no terminal pelo `dotnet run`. A migration inicial está em `Migrations/<timestamp>_InitialCreate.cs`, junto ao snapshot do modelo.
 
-## Execução e testes
+## Recursos e rotas
 
-Ainda não há software executável. Na implementação, substituir esta seção por pré-requisitos e versões reais, configuração sem segredos, comandos reproduzíveis, dados sintéticos e resultados de testes efetivamente executados. Não há build ou teste aprovado apenas pela existência desta documentação.
+`[ApiController]` faz a validação das DataAnnotations e responde `400 Bad Request` automaticamente quando o payload é inválido. Os corpos abaixo são JSON (`Content-Type: application/json`). Exemplos assumem que a API está em `https://localhost:7xxx`; troque pela URL local apresentada no terminal.
 
-## Evidências e submissão
+### Regiões
 
-Um arquivo .txt no Portal do Aluno com RM, nome e turma dos integrantes, link do GitHub e link do vídeo (slide 27).
+| Método e rota | Sucesso | Erros principais |
+|---|---|---|
+| `GET /api/regioes` | `200` com lista | — |
+| `GET /api/regioes/{id}` | `200` com região | `404` JSON se não existir |
+| `POST /api/regioes` | `201` com `Location` e entidade | `400` JSON se inválido |
+| `PUT /api/regioes/{id}` | `204` | `400` inválido; `404` JSON se não existir |
+| `DELETE /api/regioes/{id}` | `204` | `404` JSON se não existir |
 
-Organização das evidências: [evidence/README.md](evidence/README.md). Orientações de submissão: [delivery/README.md](delivery/README.md). Links de vídeo, diagramas e publicação permanecem pendentes; nenhum artefato final foi gerado.
+#### Criar região — POST `/api/regioes`
 
-## Repositórios relacionados da GS
+```bash
+curl -X POST "https://localhost:7xxx/api/regioes" -H "Content-Type: application/json" -d '{"nome":"Centro Histórico","zonaCidade":"Centro","subprefeitura":"Sé"}'
+```
 
-- [gs-arquitetura-qa](https://github.com/GS-EDUeAMIGOS/gs-arquitetura-qa) — Compliance, Quality Assurance & Tests
-- [gs-devops-cloud](https://github.com/GS-EDUeAMIGOS/gs-devops-cloud) — DevOps Tools & Cloud Computing
-- [gs-iot-redes](https://github.com/GS-EDUeAMIGOS/gs-iot-redes) — Disruptive Architectures: IoT, IoB & Generative IA
-- [gs-java-api](https://github.com/GS-EDUeAMIGOS/gs-java-api) — Java Advanced
-- [gs-database](https://github.com/GS-EDUeAMIGOS/gs-database) — Mastering Relational and Non-Relational Database
-- [gs-mobile-flutter](https://github.com/GS-EDUeAMIGOS/gs-mobile-flutter) — Mobile Application Development
+Resposta `201 Created` inclui o recurso criado e cabeçalho `Location` para `GET /api/regioes/{id}`.
 
-As referências acima organizam entregas; não significam que todas as aplicações serão serviços separados do produto. Registrar contratos entre Java/.NET, Banco, Mobile, IoT e DevOps antes de integrar.
+#### Listar e consultar região — GET `/api/regioes` e `/api/regioes/1`
 
-## Contribuição e segurança
+```bash
+curl "https://localhost:7xxx/api/regioes"
+curl "https://localhost:7xxx/api/regioes/1"
+```
 
-Veja [CONTRIBUTING.md](CONTRIBUTING.md). Não versionar senhas, tokens, strings de conexão reais ou dados pessoais de usuários. Exemplos devem usar valores fictícios.
+Formato ilustrativo da entidade:
 
-A preparação não configura equipes, permissões, CODEOWNERS, proteção de branches, CI ou deploy. Repositório público não substitui entrega no Portal nem comprova atendimento da rubrica.
+```json
+{"id":1,"nome":"Centro Histórico","zonaCidade":"Centro","subprefeitura":"Sé"}
+```
+
+#### Atualizar região — PUT `/api/regioes/1`
+
+O ID da rota determina a entidade atualizada.
+
+```bash
+curl -X PUT "https://localhost:7xxx/api/regioes/1" -H "Content-Type: application/json" -d '{"nome":"Centro Expandido","zonaCidade":"Centro","subprefeitura":"Sé"}'
+```
+
+Resposta `204 No Content`.
+
+#### Excluir região — DELETE `/api/regioes/1`
+
+```bash
+curl -i -X DELETE "https://localhost:7xxx/api/regioes/1"
+```
+
+Resposta `204 No Content` se removida. Se o ID não existir, a API responde `404` com `{"mensagem":"Região urbana com ID 999 não encontrada."}`. A exclusão da região remove também suas propostas dependentes por cascata para manter a integridade referencial.
+
+### Propostas
+
+| Método e rota | Sucesso | Erros principais |
+|---|---|---|
+| `GET /api/propostas` | `200` com lista | — |
+| `GET /api/propostas/{id}` | `200` com proposta | `404` JSON se não existir |
+| `POST /api/propostas` | `201` com `Location` e entidade | `400` se dados inválidos ou região inexistente |
+| `PUT /api/propostas/{id}` | `204` | `400` se inválido ou região inexistente; `404` se proposta não existir |
+| `DELETE /api/propostas/{id}` | `204` | `404` JSON se não existir |
+
+#### Criar proposta — POST `/api/propostas`
+
+`DataCriacao` é definida pela API em UTC. `Status` usa `RECEBIDA` como valor padrão.
+
+```bash
+curl -X POST "https://localhost:7xxx/api/propostas" -H "Content-Type: application/json" -d '{"titulo":"Melhorar iluminação do ponto","descricao":"Solicito iluminação adequada no ponto da Avenida Central para aumentar a segurança dos passageiros à noite.","categoria":"SEGURANCA","codigoLinhaOuParada":"P-204","regiaoUrbanaId":1}'
+```
+
+#### Listar e consultar proposta — GET `/api/propostas` e `/api/propostas/1`
+
+```bash
+curl "https://localhost:7xxx/api/propostas"
+curl "https://localhost:7xxx/api/propostas/1"
+```
+
+Formato ilustrativo de retorno:
+
+```json
+{"id":1,"titulo":"Melhorar iluminação do ponto","descricao":"Solicito iluminação adequada no ponto da Avenida Central para aumentar a segurança dos passageiros à noite.","categoria":"SEGURANCA","codigoLinhaOuParada":"P-204","status":"RECEBIDA","dataCriacao":"2026-01-15T12:30:00Z","regiaoUrbanaId":1}
+```
+
+#### Atualizar proposta — PUT `/api/propostas/1`
+
+```bash
+curl -X PUT "https://localhost:7xxx/api/propostas/1" -H "Content-Type: application/json" -d '{"titulo":"Iluminação e abrigo no ponto","descricao":"Solicito melhorias na iluminação e instalação de abrigo no ponto da Avenida Central para proteger passageiros.","categoria":"INFRAESTRUTURA","codigoLinhaOuParada":"P-204","status":"EM_ANALISE","regiaoUrbanaId":1}'
+```
+
+Resposta `204 No Content`. A data original de criação é preservada.
+
+#### Excluir proposta — DELETE `/api/propostas/1`
+
+```bash
+curl -i -X DELETE "https://localhost:7xxx/api/propostas/1"
+```
+
+Resposta `204 No Content` se removida.
+
+## Exemplos de erros
+
+### 400 — validação automática
+
+Título abaixo do mínimo permitido:
+
+```bash
+curl -i -X POST "https://localhost:7xxx/api/propostas" -H "Content-Type: application/json" -d '{"titulo":"Oi","descricao":"Descrição suficientemente longa para cumprir a validação.","categoria":"MOBILIDADE","regiaoUrbanaId":1}'
+```
+
+O ASP.NET Core retorna `400` com `ValidationProblemDetails`, incluindo os erros e nomes dos campos.
+
+### 400 — região inexistente
+
+```bash
+curl -i -X POST "https://localhost:7xxx/api/propostas" -H "Content-Type: application/json" -d '{"titulo":"Ajustar intervalo da linha","descricao":"Solicito revisão do intervalo da linha nos horários de pico.","categoria":"TRANSPORTE","regiaoUrbanaId":999999}'
+```
+
+Resposta: `{"mensagem":"A região urbana com ID 999999 não existe."}`. O mesmo tipo de verificação é feito no `PUT` de propostas.
+
+### 404 — recurso inexistente
+
+```bash
+curl -i "https://localhost:7xxx/api/regioes/999999"
+curl -i "https://localhost:7xxx/api/propostas/999999"
+curl -i -X DELETE "https://localhost:7xxx/api/regioes/999999"
+curl -i -X PUT "https://localhost:7xxx/api/propostas/999999" -H "Content-Type: application/json" -d '{"titulo":"Ajustar intervalo da linha","descricao":"Solicito revisão do intervalo da linha nos horários de pico.","categoria":"TRANSPORTE","regiaoUrbanaId":1}'
+```
+
+Resposta de região: `{"mensagem":"Região urbana com ID 999999 não encontrada."}`. Resposta de proposta: `{"mensagem":"Proposta de melhoria com ID 999999 não encontrada."}`.

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.*">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Oracle.EntityFrameworkCore" Version="8.23.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove=".browser_data_dir/**;.cache/**;.config/**;.local/**;.manus/**;.manus-addons/**;.nvm/**;.npm/**;.nuget/**;.secrets/**;Downloads/**;skills/**;upload/**;terminal_full_output/**" />
+  </ItemGroup>
+
+</Project>
