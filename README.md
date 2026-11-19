@@ -19,7 +19,7 @@ API REST em **ASP.NET Core 8 (Web API)** desenvolvida para sustentar o módulo d
 | Marcos Vinicius de Jesus Almeida | 567214 | 2TDS |
 
 ### Vídeo de Demonstração (até 5 minutos)
-- **Link do Vídeo no YouTube (Público / Não Listado):** *(Inserir link após gravação demonstrando o CRUD e as tabelas no Oracle)*
+- **Link do Vídeo no YouTube (Público / Não Listado):** *(https://youtu.be/20pRZVnpoqw)*
 
 ### O Problema, o Cidadão Beneficiado e os ODS da ONU
 - **Cidadão Beneficiado:** Passageiros do transporte público metropolitano, especialmente **Pessoas com Deficiência (PcD)**, idosos e cidadãos com mobilidade reduzida que convivem com barreiras físicas e falta de infraestrutura nas paradas e linhas de ônibus.
